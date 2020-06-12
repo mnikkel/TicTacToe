@@ -4,81 +4,102 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        char[][] board = new char[3][3];
-
         var scan = new Scanner(System.in);
         System.out.print("Enter cells: ");
         System.out.println();
-        String rawMoves = scan.nextLine();
-        String moves = rawMoves.replace('_', ' ');
-        for (int i = 0; i < moves.length(); i++) {
-            int y = i / 3;
-            int x = i % 3;
-            board[y][x] = moves.charAt(i);
-        }
+        Board board = new Board(scan.nextLine());
 
-        printBoard(board);
-        int a;
-        int b;
-        int x;
-        int y;
+        board.printBoard();
         boolean validMove;
         do {
             System.out.print("Enter the coordinates: ");
             System.out.println();
-            a = scan.nextInt();
-            b = scan.nextInt();
-            int[] coords = convertCoordinates(a, b);
-            x = coords[0];
-            y = coords[1];
-            validMove = isValidMove(a, b, x, y, board);
+            boolean x = board.setX(scan.nextInt());
+            boolean y = board.setY(scan.nextInt());
+            char square = board.getCurrentSquare();
+            if (square != ' ') {
+                System.out.println("This cell is occupied! Try again!");
+            }
+            validMove = x && y && square == ' ';
         } while (!validMove);
 
-        char[][] newBoard = placeMoves(board, x, y);
-        System.out.println(checkStatus(newBoard));
-        printBoard(newBoard);
+        board.placeMove();
+        System.out.println(board.checkStatus());
+        board.printBoard();
     }
+}
 
-    private static boolean isValidMove(int a, int b, int x, int y, char[][] board) {
-        if (a < 1 || a > 3 || b < 1 || b > 3) {
-            return false;
-        } else if (board[y][x] != ' ') {
-            System.out.println("This cell is occupied! Try again!");
-            return false;
+class Board {
+    private char[][] moves = new char[3][3];
+    private int x;
+    private int y;
+
+    Board(String rawMoves) {
+        String spaces = rawMoves.replace('_', ' ');
+        for (int i = 0; i < spaces.length(); i++) {
+            int y = i / 3;
+            int x = i % 3;
+            this.moves[y][x] = spaces.charAt(i);
         }
-
-        return true;
     }
 
-    private static int[] convertCoordinates(int x, int y) {
-        x--;
-        switch (y) {
-            case 1:
-                y = 2;
-                break;
-            case 2:
-                y = 1;
-                break;
-            case 3:
-                y = 0;
+    public void printBoard() {
+        String hSep = "---------";
+        System.out.println(hSep);
+        for (char[] row : this.moves) {
+            System.out.print("| ");
+            for (char ch : row) {
+                System.out.print(ch + " ");
+            }
+            System.out.println("|");
         }
-        return new int[]{x, y};
+        System.out.println(hSep);
     }
 
-    private static char[][] placeMoves(char[][] board, int x, int y) {
-        board[y][x] = 'X';
-        return board;
+    public boolean setX(int a) {
+        if (a < 1 || a > 3) {
+            return false;
+        } else {
+            this.x = --a;
+            return true;
+        }
     }
 
-    private static String checkStatus(char[][] board) {
-        int xCount = count(board, 'X');
-        int oCount = count(board, 'O');
+    public boolean setY(int b) {
+        if (b < 1 || b > 3) {
+            return false;
+        } else {
+            switch (b) {
+                case 1:
+                    this.y = 2;
+                    break;
+                case 2:
+                    this.y = 1;
+                    break;
+                case 3:
+                    this.y = 0;
+            }
+            return true;
+        }
+    }
+
+    public char getCurrentSquare() {
+        return moves[y][x];
+    }
+
+    public void placeMove() {
+        moves[y][x] = 'X';
+    }
+
+    public String checkStatus() {
+        int xCount = count('X');
+        int oCount = count('O');
         if (Math.abs(xCount - oCount) > 1) {
             return "Impossible";
         } else {
-            String check1 = checkRow(board);
-            String check2 = checkRow(mirror(board));
-            String check3 = checkDiagonal(board);
+            String check1 = checkRow(moves);
+            String check2 = checkRow(mirror());
+            String check3 = checkDiagonal();
             int xWins = 0;
             int oWins = 0;
             if ((check1 + check2 + check3).contains("Impossible")) {
@@ -112,29 +133,29 @@ public class Main {
         }
     }
 
-    private static String checkDiagonal(char[][] board) {
-        if (board[0][0] == board[1][1] && board[0][0] == board[2][2]) {
-            return board[1][1] + " wins";
-        } else if (board[0][2] == board[1][1] && board[0][2] == board[2][0]) {
-            return board[1][1] + " wins";
+    private String checkDiagonal() {
+        if (moves[0][0] == moves[1][1] && moves[0][0] == moves[2][2]) {
+            return moves[1][1] + " wins";
+        } else if (moves[0][2] == moves[1][1] && moves[0][2] == moves[2][0]) {
+            return moves[1][1] + " wins";
         }
         return "Draw";
     }
 
-    private static char[][] mirror(char[][] board) {
+    private char[][] mirror() {
         char[][] mirror = new char[3][3];
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                mirror[i][j] = board[j][i];
+                mirror[i][j] = moves[j][i];
             }
         }
 
         return mirror;
     }
 
-    private static String checkRow(char[][] board) {
+    private String checkRow(char[][] moves) {
         char winner = '_';
-        for (char[] row : board) {
+        for (char[] row : moves) {
             if (row[0] == row[1] && row[0] == row[2] && (row[0] == 'X' || row[0] == 'O')) {
                 if (winner == 'X' || winner == 'O') {
                     return "Impossible";
@@ -152,28 +173,15 @@ public class Main {
         }
     }
 
-    private static int count(char[][] board, char match) {
+    private int count(char match) {
         int count = 0;
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                if (board[i][j] == match) {
+                if (moves[i][j] == match) {
                     count++;
                 }
             }
         }
         return count;
-    }
-
-    private static void printBoard(char[][] board) {
-        String hSep = "---------";
-        System.out.println(hSep);
-        for (char[] row : board) {
-            System.out.print("| ");
-            for (char ch : row) {
-                System.out.print(ch + " ");
-            }
-            System.out.println("|");
-        }
-        System.out.println(hSep);
     }
 }
