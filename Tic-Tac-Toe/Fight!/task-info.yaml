@@ -491,5 +491,5 @@ files:
     |\");\n        }\n        System.out.println(hSep);\n    }\n}\n"
   learner_created: true
 feedback_link: https://hyperskill.org/projects/48/stages/259/implement
-status: Failed
+status: Solved
 record: -1

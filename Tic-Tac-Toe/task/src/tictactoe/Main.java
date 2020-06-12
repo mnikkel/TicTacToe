@@ -5,27 +5,31 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         var scan = new Scanner(System.in);
-        System.out.print("Enter cells: ");
-        System.out.println();
-        Board board = new Board(scan.nextLine());
+        Board board = new Board("_________");
 
-        board.printBoard();
         boolean validMove;
+        boolean gameOver = false;
         do {
-            System.out.print("Enter the coordinates: ");
-            System.out.println();
-            boolean x = board.setX(scan.nextInt());
-            boolean y = board.setY(scan.nextInt());
-            char square = board.getCurrentSquare();
-            if (square != ' ') {
-                System.out.println("This cell is occupied! Try again!");
+            board.printBoard();
+            do {
+                System.out.print("Enter the coordinates: ");
+                System.out.println();
+                boolean x = board.setX(scan.nextInt());
+                boolean y = board.setY(scan.nextInt());
+                char square = board.getCurrentSquare();
+                if (square != ' ') {
+                    System.out.println("This cell is occupied! Try again!");
+                }
+                validMove = x && y && square == ' ';
+            } while (!validMove);
+            board.placeMove();
+            board.printBoard();
+            board.nextTurn();
+            if (!board.checkStatus().equals("Game not finished")) {
+                gameOver = true;
             }
-            validMove = x && y && square == ' ';
-        } while (!validMove);
-
-        board.placeMove();
+        } while (!gameOver);
         System.out.println(board.checkStatus());
-        board.printBoard();
     }
 }
 
@@ -33,6 +37,7 @@ class Board {
     private char[][] moves = new char[3][3];
     private int x;
     private int y;
+    private char turn = 'X';
 
     Board(String rawMoves) {
         String spaces = rawMoves.replace('_', ' ');
@@ -88,7 +93,11 @@ class Board {
     }
 
     public void placeMove() {
-        moves[y][x] = 'X';
+        moves[y][x] = turn;
+    }
+
+    public void nextTurn() {
+        turn = turn == 'X' ? 'O' : 'X';
     }
 
     public String checkStatus() {
